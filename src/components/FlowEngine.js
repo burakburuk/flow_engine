@@ -37,25 +37,25 @@ const styles = theme => ({
 class FlowEngine extends Component {
     visitedRules = [];
 
-    runRule = (ruleId, data) => {
+    runRule = (previousRuleId = 0, ruleId, data) => {
         try {
             const rule = rules.find(x => x.id === ruleId);
             if (rule === undefined) {
                 throw new Error("Rule could not be found!");
             }
             const result = rule.body(data);
-            if (result && rule.true_id !== null && rule.true_id !== ruleId) {
+            if (result && rule.true_id !== null && rule.true_id !== previousRuleId) {
                 this.visitedRules.push({
                     rule: rule,
                     nextExecution: true
                 });
-                return this.runRule(rule.true_id, data);
-            } else if (rule.false_id !== null && rule.false_id !== ruleId) {
+                return this.runRule(ruleId, rule.true_id, data);
+            } else if (rule.false_id !== null && rule.false_id !== previousRuleId) {
                 this.visitedRules.push({
                     rule: rule,
                     nextExecution: false
                 });
-                return this.runRule(rule.false_id, data);
+                return this.runRule(ruleId, rule.false_id, data);
             } else {
                 console.log("Next rule is null, Rules over");
                 return;
@@ -67,7 +67,7 @@ class FlowEngine extends Component {
 
     render() {
         const {classes} = this.props;
-        this.runRule(1, data);
+        this.runRule(0, 1, data);
 
         const ruleList = this.visitedRules.map(item => {
             return (
