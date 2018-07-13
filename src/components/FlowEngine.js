@@ -38,30 +38,30 @@ class FlowEngine extends Component {
     visitedRules = [];
 
     runRule = (ruleId, data) => {
-        const rule = rules.find(x => x.id === ruleId);
-        if (rule === undefined) {
-            console.log("Rule cannot be found!");
-            return;
-        }
-        console.log("Rule body with the id " + ruleId + " will be executed!");
-        const result = rule.body(data);
-        if (result && rule.true_id !== null && rule.true_id !== ruleId) {
-            this.visitedRules.push({
-                rule: rule,
-                nextExecution: true
-            });
-            console.log("Execution result is true, Rule with the id " + rule.true_id + " will be called!");
-            return this.runRule(rule.true_id, data);
-        } else if (rule.false_id !== null && rule.false_id !== ruleId) {
-            this.visitedRules.push({
-                rule: rule,
-                nextExecution: false
-            });
-            console.log("Execution result is false, Rule with the id " + rule.false_id + " will be called!");
-            return this.runRule(rule.false_id, data);
-        } else {
-            console.log("Next rule is null, Rules over");
-            return;
+        try {
+            const rule = rules.find(x => x.id === ruleId);
+            if (rule === undefined) {
+                throw new Error("Rule could not be found!");
+            }
+            const result = rule.body(data);
+            if (result && rule.true_id !== null && rule.true_id !== ruleId) {
+                this.visitedRules.push({
+                    rule: rule,
+                    nextExecution: true
+                });
+                return this.runRule(rule.true_id, data);
+            } else if (rule.false_id !== null && rule.false_id !== ruleId) {
+                this.visitedRules.push({
+                    rule: rule,
+                    nextExecution: false
+                });
+                return this.runRule(rule.false_id, data);
+            } else {
+                console.log("Next rule is null, Rules over");
+                return;
+            }
+        } catch (error) {
+            console.warn(error);
         }
     };
 
@@ -71,7 +71,7 @@ class FlowEngine extends Component {
 
         const ruleList = this.visitedRules.map(item => {
             return (
-                <ExpansionPanel key={objectHash(item)} classses={{root: classes.panelRoot}}>
+                <ExpansionPanel key={objectHash(item)} classes={{root: classes.panelRoot}}>
                     <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}
                                            classes={{root: (item.nextExecution ? classes.trueColor : classes.falseColor)}}>
                         <Typography className={classes.heading}>{item.rule.id + " - " + item.rule.title}</Typography>
